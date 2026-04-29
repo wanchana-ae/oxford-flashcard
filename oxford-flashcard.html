@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Oxford 500 Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #141414;
+    --card2: #1a1a1a;
+    --accent: #e8e8e8;
+    --dim: #555;
+    --known: #4ade80;
+    --unknown: #f87171;
+    --border: #2a2a2a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    background: var(--bg);
+    color: var(--accent);
+    font-family: 'Noto Sans Thai', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    width: 100%;
+    max-width: 480px;
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .stats-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .stats-pill span { color: var(--known); }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    width: 100%;
+    max-width: 480px;
+    padding: 16px 20px 0;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--known);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* CARD AREA */
+  .card-area {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .card-counter {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 2px;
+  }
+
+  /* FLASHCARD */
+  .flashcard-wrap {
+    width: 100%;
+    perspective: 1000px;
+    cursor: pointer;
+  }
+  .flashcard {
+    width: 100%;
+    min-height: 260px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 260px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 28px;
+    gap: 12px;
+  }
+  .card-face.back {
+    transform: rotateY(180deg);
+    background: var(--card2);
+  }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .card-word {
+    font-family: 'Space Mono', monospace;
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  .card-phonetic {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+  }
+  .card-pos {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #888;
+    background: var(--border);
+    padding: 3px 10px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+  }
+  .card-meaning {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .card-example {
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+    font-style: italic;
+    line-height: 1.5;
+    padding-top: 4px;
+  }
+  .card-tap-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 2px;
+    margin-top: 12px;
+  }
+
+  /* MODE BADGE */
+  .mode-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 10px;
+  }
+  .mode-badge b { color: var(--accent); }
+
+  /* ACTION BUTTONS */
+  .actions {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+    padding: 0 20px;
+    max-width: 480px;
+  }
+  .btn {
+    flex: 1;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-unknown {
+    background: rgba(248,113,113,0.1);
+    color: var(--unknown);
+    border: 1px solid rgba(248,113,113,0.3);
+  }
+  .btn-known {
+    background: rgba(74,222,128,0.1);
+    color: var(--known);
+    border: 1px solid rgba(74,222,128,0.3);
+  }
+  .btn-unknown:active { background: rgba(248,113,113,0.2); }
+  .btn-known:active { background: rgba(74,222,128,0.2); }
+
+  /* NEXT BUTTON */
+  .btn-next {
+    width: calc(100% - 40px);
+    max-width: 480px;
+    margin: 8px 20px 0;
+    padding: 16px;
+    background: var(--card);
+    color: var(--dim);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-next:active { background: var(--card2); transform: scale(0.98); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    width: 100%;
+    max-width: 480px;
+    padding: 16px 20px 32px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  .nav-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 10px;
+    transition: color 0.15s;
+  }
+  .nav-btn:active { color: var(--accent); }
+  .nav-btn.active { color: var(--accent); }
+
+  /* SCREEN PANELS */
+  .screen { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .screen.active { display: flex; }
+
+  /* PROGRESS SCREEN */
+  .progress-screen {
+    width: 100%;
+    max-width: 480px;
+    padding: 20px;
+  }
+  .progress-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .big-stat {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .big-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--known);
+    line-height: 1;
+  }
+  .big-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-box-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .stat-box-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 1px;
+  }
+  .known-words-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .known-words-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+  .word-chip {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--known);
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.2);
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin: 3px;
+  }
+  .btn-reset {
+    width: 100%;
+    margin-top: 16px;
+    padding: 16px;
+    background: none;
+    color: var(--unknown);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-reset:active { background: rgba(248,113,113,0.1); }
+
+  /* COMPLETE */
+  .complete-screen {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 480px;
+  }
+  .complete-emoji { font-size: 64px; margin-bottom: 16px; }
+  .complete-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .complete-sub {
+    font-size: 14px;
+    color: var(--dim);
+    margin-bottom: 32px;
+  }
+  .btn-again {
+    padding: 18px 40px;
+    background: var(--card);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-again:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<!-- STUDY SCREEN -->
+<div class="screen active" id="study-screen">
+  <div class="header">
+    <div class="logo">Oxford · 500</div>
+    <div class="stats-pill">จำได้ <span id="known-count">0</span> / 500</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-label">
+      <span id="progress-text">0%</span>
+      <span id="session-count">session: 0</span>
+    </div>
+  </div>
+
+  <div class="card-area">
+    <div class="card-counter" id="card-counter">001 / 500</div>
+
+    <div class="flashcard-wrap" onclick="flipCard()">
+      <div class="flashcard" id="flashcard">
+        <div class="card-face front">
+          <div class="card-label" id="front-label">ENGLISH</div>
+          <div class="card-word" id="front-word">—</div>
+          <div class="card-phonetic" id="front-phonetic"></div>
+          <div class="card-pos" id="front-pos"></div>
+          <div class="card-tap-hint">TAP TO FLIP</div>
+        </div>
+        <div class="card-face back">
+          <div class="card-label" id="back-label">ภาษาไทย</div>
+          <div class="card-meaning" id="back-meaning">—</div>
+          <div class="card-example" id="back-example"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-badge">mode: <b id="mode-text">EN → TH</b></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-unknown" onclick="markCard(false)">✕ ยังไม่รู้</button>
+    <button class="btn btn-known" onclick="markCard(true)">✓ จำได้</button>
+  </div>
+  <button class="btn-next" onclick="nextCard()">ข้ามการ์ดนี้ →</button>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="showScreen('study')">STUDY</button>
+    <button class="nav-btn" onclick="showScreen('progress')">PROGRESS</button>
+  </div>
+</div>
+
+<!-- PROGRESS SCREEN -->
+<div class="screen" id="progress-screen">
+  <div class="header">
+    <div class="logo">Oxford · 500</div>
+    <div class="stats-pill">จำได้ <span id="known-count2">0</span> / 500</div>
+  </div>
+
+  <div class="progress-screen">
+    <div class="progress-title">ความคืบหน้า</div>
+
+    <div class="big-stat">
+      <div class="big-num" id="big-known">0</div>
+      <div class="big-label">คำที่จำได้แล้ว</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-box-num" style="color:var(--unknown)" id="stat-remaining">500</div>
+        <div class="stat-box-label">คงเหลือ</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-num" style="color:#888" id="stat-session">0</div>
+        <div class="stat-box-label">รอบนี้เล่น</div>
+      </div>
+    </div>
+
+    <div class="known-words-list" id="known-words-list">
+      <div class="known-words-title">WORDS MASTERED</div>
+      <div id="known-chips">ยังไม่มีคำที่จำได้</div>
+    </div>
+
+    <button class="btn-reset" onclick="resetProgress()">↺ รีเซ็ตความคืบหน้า</button>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('study')">STUDY</button>
+    <button class="nav-btn active" onclick="showScreen('progress')">PROGRESS</button>
+  </div>
+</div>
+
+<!-- COMPLETE SCREEN -->
+<div class="screen" id="complete-screen">
+  <div class="complete-screen">
+    <div class="complete-emoji">🎉</div>
+    <div class="complete-title">เล่นครบแล้ว!</div>
+    <div class="complete-sub" id="complete-sub">เล่นการ์ดครบทุกใบในรอบนี้</div>
+    <button class="btn-again" onclick="startAgain()">เล่นอีกรอบ</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// OXFORD 500 WORDS (ตัวอย่าง 500 คำ)
+// ============================================================
+const words = [
+  {w:"able",ph:"/ˈeɪ.bəl/",pos:"adj",th:"สามารถ",ex:"Are you able to swim?"},
+  {w:"about",ph:"/əˈbaʊt/",pos:"prep",th:"เกี่ยวกับ",ex:"Tell me about yourself."},
+  {w:"above",ph:"/əˈbʌv/",pos:"prep",th:"เหนือกว่า",ex:"The sky is above us."},
+  {w:"across",ph:"/əˈkrɒs/",pos:"prep",th:"ข้ามไป",ex:"Walk across the road."},
+  {w:"act",ph:"/ækt/",pos:"v",th:"กระทำ",ex:"Act quickly!"},
+  {w:"active",ph:"/ˈæk.tɪv/",pos:"adj",th:"กระตือรือร้น",ex:"She is very active."},
+  {w:"add",ph:"/æd/",pos:"v",th:"บวก / เพิ่ม",ex:"Add some salt."},
+  {w:"afraid",ph:"/əˈfreɪd/",pos:"adj",th:"กลัว",ex:"Don't be afraid."},
+  {w:"after",ph:"/ˈɑːf.tər/",pos:"prep",th:"หลังจาก",ex:"After school, I play."},
+  {w:"again",ph:"/əˈɡen/",pos:"adv",th:"อีกครั้ง",ex:"Say it again."},
+  {w:"age",ph:"/eɪdʒ/",pos:"n",th:"อายุ",ex:"What is your age?"},
+  {w:"ago",ph:"/əˈɡəʊ/",pos:"adv",th:"ที่แล้ว",ex:"Long ago, there was a king."},
+  {w:"agree",ph:"/əˈɡriː/",pos:"v",th:"เห็นด้วย",ex:"I agree with you."},
+  {w:"air",ph:"/eər/",pos:"n",th:"อากาศ",ex:"The air is fresh."},
+  {w:"all",ph:"/ɔːl/",pos:"det",th:"ทั้งหมด",ex:"All students passed."},
+  {w:"allow",ph:"/əˈlaʊ/",pos:"v",th:"อนุญาต",ex:"Allow me to help."},
+  {w:"also",ph:"/ˈɔːl.səʊ/",pos:"adv",th:"ด้วย / เช่นกัน",ex:"I also like music."},
+  {w:"always",ph:"/ˈɔːl.weɪz/",pos:"adv",th:"เสมอ",ex:"She always smiles."},
+  {w:"angry",ph:"/ˈæŋ.ɡri/",pos:"adj",th:"โกรธ",ex:"He was angry."},
+  {w:"animal",ph:"/ˈæn.ɪ.məl/",pos:"n",th:"สัตว์",ex:"Dogs are animals."},
+  {w:"answer",ph:"/ˈɑːn.sər/",pos:"n/v",th:"คำตอบ / ตอบ",ex:"Answer the question."},
+  {w:"any",ph:"/ˈen.i/",pos:"det",th:"ใดก็ได้",ex:"Any colour is fine."},
+  {w:"area",ph:"/ˈeə.ri.ə/",pos:"n",th:"พื้นที่",ex:"This area is safe."},
+  {w:"around",ph:"/əˈraʊnd/",pos:"prep",th:"รอบๆ",ex:"Walk around the park."},
+  {w:"arrive",ph:"/əˈraɪv/",pos:"v",th:"มาถึง",ex:"We arrived late."},
+  {w:"ask",ph:"/ɑːsk/",pos:"v",th:"ถาม",ex:"Ask your teacher."},
+  {w:"at",ph:"/æt/",pos:"prep",th:"ที่",ex:"Meet me at school."},
+  {w:"away",ph:"/əˈweɪ/",pos:"adv",th:"ออกไป",ex:"Go away!"},
+  {w:"back",ph:"/bæk/",pos:"n/adv",th:"หลัง / กลับ",ex:"Come back soon."},
+  {w:"bad",ph:"/bæd/",pos:"adj",th:"แย่ / ไม่ดี",ex:"That's a bad idea."},
+  {w:"ball",ph:"/bɔːl/",pos:"n",th:"ลูกบอล",ex:"Kick the ball."},
+  {w:"bank",ph:"/bæŋk/",pos:"n",th:"ธนาคาร",ex:"Go to the bank."},
+  {w:"basic",ph:"/ˈbeɪ.sɪk/",pos:"adj",th:"พื้นฐาน",ex:"Basic English skills."},
+  {w:"be",ph:"/biː/",pos:"v",th:"เป็น / อยู่",ex:"Be careful!"},
+  {w:"beautiful",ph:"/ˈbjuː.tɪ.fəl/",pos:"adj",th:"สวยงาม",ex:"What a beautiful day!"},
+  {w:"because",ph:"/bɪˈkɒz/",pos:"conj",th:"เพราะว่า",ex:"I stayed because I liked it."},
+  {w:"become",ph:"/bɪˈkʌm/",pos:"v",th:"กลายเป็น",ex:"She became a doctor."},
+  {w:"before",ph:"/bɪˈfɔːr/",pos:"prep",th:"ก่อน",ex:"Wash hands before eating."},
+  {w:"begin",ph:"/bɪˈɡɪn/",pos:"v",th:"เริ่มต้น",ex:"Let's begin!"},
+  {w:"behind",ph:"/bɪˈhaɪnd/",pos:"prep",th:"ข้างหลัง",ex:"Stand behind me."},
+  {w:"believe",ph:"/bɪˈliːv/",pos:"v",th:"เชื่อ",ex:"I believe you."},
+  {w:"best",ph:"/best/",pos:"adj",th:"ดีที่สุด",ex:"She did her best."},
+  {w:"better",ph:"/ˈbet.ər/",pos:"adj",th:"ดีกว่า",ex:"Today is better."},
+  {w:"big",ph:"/bɪɡ/",pos:"adj",th:"ใหญ่",ex:"A big dog."},
+  {w:"body",ph:"/ˈbɒd.i/",pos:"n",th:"ร่างกาย",ex:"Exercise your body."},
+  {w:"book",ph:"/bʊk/",pos:"n",th:"หนังสือ",ex:"Read a book."},
+  {w:"both",ph:"/bəʊθ/",pos:"det",th:"ทั้งสอง",ex:"Both are correct."},
+  {w:"break",ph:"/breɪk/",pos:"v/n",th:"หยุดพัก / แตก",ex:"Take a break."},
+  {w:"bring",ph:"/brɪŋ/",pos:"v",th:"นำมา",ex:"Bring your umbrella."},
+  {w:"build",ph:"/bɪld/",pos:"v",th:"สร้าง",ex:"Build a house."},
+  {w:"busy",ph:"/ˈbɪz.i/",pos:"adj",th:"ยุ่ง",ex:"I am busy today."},
+  {w:"but",ph:"/bʌt/",pos:"conj",th:"แต่",ex:"Small but strong."},
+  {w:"buy",ph:"/baɪ/",pos:"v",th:"ซื้อ",ex:"Buy some food."},
+  {w:"by",ph:"/baɪ/",pos:"prep",th:"โดย",ex:"Go by bus."},
+  {w:"call",ph:"/kɔːl/",pos:"v",th:"โทร / เรียก",ex:"Call me later."},
+  {w:"can",ph:"/kæn/",pos:"modal",th:"สามารถ",ex:"I can swim."},
+  {w:"car",ph:"/kɑːr/",pos:"n",th:"รถยนต์",ex:"Drive a car."},
+  {w:"care",ph:"/keər/",pos:"v/n",th:"ดูแล / ห่วงใย",ex:"Take care of yourself."},
+  {w:"carry",ph:"/ˈkær.i/",pos:"v",th:"แบก / พกพา",ex:"Carry the bag."},
+  {w:"change",ph:"/tʃeɪndʒ/",pos:"v/n",th:"เปลี่ยน",ex:"Change your clothes."},
+  {w:"check",ph:"/tʃek/",pos:"v",th:"ตรวจสอบ",ex:"Check your work."},
+  {w:"child",ph:"/tʃaɪld/",pos:"n",th:"เด็ก",ex:"The child is playing."},
+  {w:"city",ph:"/ˈsɪt.i/",pos:"n",th:"เมือง",ex:"Bangkok is a big city."},
+  {w:"class",ph:"/klɑːs/",pos:"n",th:"ชั้นเรียน",ex:"Go to class."},
+  {w:"clean",ph:"/kliːn/",pos:"adj/v",th:"สะอาด / ทำความสะอาด",ex:"Keep it clean."},
+  {w:"clear",ph:"/klɪər/",pos:"adj",th:"ชัดเจน",ex:"The answer is clear."},
+  {w:"close",ph:"/kləʊz/",pos:"v/adj",th:"ปิด / ใกล้",ex:"Close the door."},
+  {w:"cold",ph:"/kəʊld/",pos:"adj",th:"เย็น / หนาว",ex:"It's cold outside."},
+  {w:"colour",ph:"/ˈkʌl.ər/",pos:"n",th:"สี",ex:"What colour is it?"},
+  {w:"come",ph:"/kʌm/",pos:"v",th:"มา",ex:"Come here!"},
+  {w:"common",ph:"/ˈkɒm.ən/",pos:"adj",th:"ธรรมดา / ทั่วไป",ex:"A common mistake."},
+  {w:"computer",ph:"/kəmˈpjuː.tər/",pos:"n",th:"คอมพิวเตอร์",ex:"Use a computer."},
+  {w:"continue",ph:"/kənˈtɪn.juː/",pos:"v",th:"ดำเนินต่อ",ex:"Continue reading."},
+  {w:"control",ph:"/kənˈtrəʊl/",pos:"v/n",th:"ควบคุม",ex:"Control your emotions."},
+  {w:"cook",ph:"/kʊk/",pos:"v/n",th:"ทำอาหาร / พ่อครัว",ex:"Cook dinner."},
+  {w:"correct",ph:"/kəˈrekt/",pos:"adj",th:"ถูกต้อง",ex:"That's correct!"},
+  {w:"cost",ph:"/kɒst/",pos:"v/n",th:"ราคา / ค่าใช้จ่าย",ex:"How much does it cost?"},
+  {w:"country",ph:"/ˈkʌn.tri/",pos:"n",th:"ประเทศ",ex:"My country is Thailand."},
+  {w:"create",ph:"/kriˈeɪt/",pos:"v",th:"สร้าง / สร้างสรรค์",ex:"Create something new."},
+  {w:"cut",ph:"/kʌt/",pos:"v",th:"ตัด",ex:"Cut the paper."},
+  {w:"dark",ph:"/dɑːk/",pos:"adj",th:"มืด",ex:"It's dark outside."},
+  {w:"day",ph:"/deɪ/",pos:"n",th:"วัน",ex:"Have a good day!"},
+  {w:"dead",ph:"/ded/",pos:"adj",th:"ตาย",ex:"The plant is dead."},
+  {w:"decide",ph:"/dɪˈsaɪd/",pos:"v",th:"ตัดสินใจ",ex:"Decide now."},
+  {w:"deep",ph:"/diːp/",pos:"adj",th:"ลึก",ex:"The ocean is deep."},
+  {w:"describe",ph:"/dɪˈskraɪb/",pos:"v",th:"อธิบาย / บรรยาย",ex:"Describe your house."},
+  {w:"difference",ph:"/ˈdɪf.ər.əns/",pos:"n",th:"ความแตกต่าง",ex:"What's the difference?"},
+  {w:"difficult",ph:"/ˈdɪf.ɪ.kəlt/",pos:"adj",th:"ยาก",ex:"This is difficult."},
+  {w:"do",ph:"/duː/",pos:"v",th:"ทำ",ex:"Do your homework."},
+  {w:"door",ph:"/dɔːr/",pos:"n",th:"ประตู",ex:"Open the door."},
+  {w:"down",ph:"/daʊn/",pos:"adv",th:"ลง",ex:"Sit down please."},
+  {w:"draw",ph:"/drɔː/",pos:"v",th:"วาดรูป",ex:"Draw a picture."},
+  {w:"dream",ph:"/driːm/",pos:"n/v",th:"ฝัน",ex:"Dream big!"},
+  {w:"drink",ph:"/drɪŋk/",pos:"v/n",th:"ดื่ม",ex:"Drink water."},
+  {w:"drive",ph:"/draɪv/",pos:"v",th:"ขับรถ",ex:"Drive carefully."},
+  {w:"drop",ph:"/drɒp/",pos:"v",th:"ทิ้ง / หยด",ex:"Don't drop it."},
+  {w:"dry",ph:"/draɪ/",pos:"adj/v",th:"แห้ง",ex:"Dry your hands."},
+  {w:"during",ph:"/ˈdjʊər.ɪŋ/",pos:"prep",th:"ระหว่าง",ex:"During the lesson."},
+  {w:"each",ph:"/iːtʃ/",pos:"det",th:"แต่ละ",ex:"Each student has a book."},
+  {w:"early",ph:"/ˈɜː.li/",pos:"adj/adv",th:"เช้า / เร็ว",ex:"Wake up early."},
+  {w:"easy",ph:"/ˈiː.zi/",pos:"adj",th:"ง่าย",ex:"This is easy."},
+  {w:"eat",ph:"/iːt/",pos:"v",th:"กิน",ex:"Eat your vegetables."},
+  {w:"end",ph:"/end/",pos:"n/v",th:"สิ้นสุด / ท้าย",ex:"The end of the story."},
+  {w:"enough",ph:"/ɪˈnʌf/",pos:"det",th:"เพียงพอ",ex:"I have enough money."},
+  {w:"enter",ph:"/ˈen.tər/",pos:"v",th:"เข้าไป",ex:"Enter the room."},
+  {w:"even",ph:"/ˈiː.vən/",pos:"adv",th:"แม้กระทั่ง",ex:"Even I can do it."},
+  {w:"ever",ph:"/ˈev.ər/",pos:"adv",th:"เคย",ex:"Have you ever been there?"},
+  {w:"every",ph:"/ˈev.ri/",pos:"det",th:"ทุก",ex:"Every day."},
+  {w:"example",ph:"/ɪɡˈzɑːm.pəl/",pos:"n",th:"ตัวอย่าง",ex:"Give an example."},
+  {w:"eye",ph:"/aɪ/",pos:"n",th:"ตา",ex:"Open your eyes."},
+  {w:"face",ph:"/feɪs/",pos:"n",th:"ใบหน้า",ex:"Wash your face."},
+  {w:"fall",ph:"/fɔːl/",pos:"v",th:"ตก / ล้ม",ex:"Don't fall down."},
+  {w:"family",ph:"/ˈfæm.ɪ.li/",pos:"n",th:"ครอบครัว",ex:"I love my family."},
+  {w:"far",ph:"/fɑːr/",pos:"adj/adv",th:"ไกล",ex:"It's not far."},
+  {w:"fast",ph:"/fɑːst/",pos:"adj/adv",th:"เร็ว",ex:"Run fast!"},
+  {w:"feel",ph:"/fiːl/",pos:"v",th:"รู้สึก",ex:"How do you feel?"},
+  {w:"few",ph:"/fjuː/",pos:"det",th:"น้อย / บางส่วน",ex:"A few minutes."},
+  {w:"fill",ph:"/fɪl/",pos:"v",th:"เติม / กรอก",ex:"Fill the glass."},
+  {w:"find",ph:"/faɪnd/",pos:"v",th:"ค้นหา / พบ",ex:"Find the answer."},
+  {w:"finish",ph:"/ˈfɪn.ɪʃ/",pos:"v",th:"เสร็จสิ้น",ex:"Finish your work."},
+  {w:"fire",ph:"/faɪər/",pos:"n",th:"ไฟ",ex:"Don't play with fire."},
+  {w:"first",ph:"/fɜːst/",pos:"adj",th:"แรก / อันดับหนึ่ง",ex:"First place!"},
+  {w:"follow",ph:"/ˈfɒl.əʊ/",pos:"v",th:"ติดตาม",ex:"Follow the rules."},
+  {w:"food",ph:"/fuːd/",pos:"n",th:"อาหาร",ex:"Thai food is delicious."},
+  {w:"foot",ph:"/fʊt/",pos:"n",th:"เท้า",ex:"My foot hurts."},
+  {w:"for",ph:"/fɔːr/",pos:"prep",th:"สำหรับ",ex:"This is for you."},
+  {w:"force",ph:"/fɔːs/",pos:"n/v",th:"แรง / บังคับ",ex:"Don't force it."},
+  {w:"forget",ph:"/fəˈɡet/",pos:"v",th:"ลืม",ex:"Don't forget!"},
+  {w:"form",ph:"/fɔːm/",pos:"n/v",th:"แบบฟอร์ม / รูปแบบ",ex:"Fill in the form."},
+  {w:"free",ph:"/friː/",pos:"adj",th:"ฟรี / อิสระ",ex:"Are you free today?"},
+  {w:"friend",ph:"/frend/",pos:"n",th:"เพื่อน",ex:"She's my best friend."},
+  {w:"front",ph:"/frʌnt/",pos:"n",th:"ด้านหน้า",ex:"Sit at the front."},
+  {w:"full",ph:"/fʊl/",pos:"adj",th:"เต็ม",ex:"I'm full, thank you."},
+  {w:"future",ph:"/ˈfjuː.tʃər/",pos:"n",th:"อนาคต",ex:"The future is bright."},
+  {w:"get",ph:"/ɡet/",pos:"v",th:"ได้รับ / ไปถึง",ex:"Get some rest."},
+  {w:"give",ph:"/ɡɪv/",pos:"v",th:"ให้",ex:"Give me a chance."},
+  {w:"go",ph:"/ɡəʊ/",pos:"v",th:"ไป",ex:"Let's go!"},
+  {w:"good",ph:"/ɡʊd/",pos:"adj",th:"ดี",ex:"Good morning!"},
+  {w:"great",ph:"/ɡreɪt/",pos:"adj",th:"ยอดเยี่ยม",ex:"That's great!"},
+  {w:"grow",ph:"/ɡrəʊ/",pos:"v",th:"เติบโต",ex:"Children grow fast."},
+  {w:"hand",ph:"/hænd/",pos:"n",th:"มือ",ex:"Raise your hand."},
+  {w:"happen",ph:"/ˈhæp.ən/",pos:"v",th:"เกิดขึ้น",ex:"What happened?"},
+  {w:"happy",ph:"/ˈhæp.i/",pos:"adj",th:"มีความสุข",ex:"I'm so happy!"},
+  {w:"hard",ph:"/hɑːd/",pos:"adj/adv",th:"ยาก / หนัก",ex:"Work hard."},
+  {w:"have",ph:"/hæv/",pos:"v",th:"มี",ex:"I have a dog."},
+  {w:"head",ph:"/hed/",pos:"n",th:"หัว",ex:"Use your head."},
+  {w:"health",ph:"/helθ/",pos:"n",th:"สุขภาพ",ex:"Health is wealth."},
+  {w:"hear",ph:"/hɪər/",pos:"v",th:"ได้ยิน",ex:"Can you hear me?"},
+  {w:"help",ph:"/help/",pos:"v",th:"ช่วย",ex:"Can I help you?"},
+  {w:"here",ph:"/hɪər/",pos:"adv",th:"ที่นี่",ex:"Come here!"},
+  {w:"high",ph:"/haɪ/",pos:"adj",th:"สูง",ex:"A high mountain."},
+  {w:"hold",ph:"/həʊld/",pos:"v",th:"ถือ / จับ",ex:"Hold my hand."},
+  {w:"home",ph:"/həʊm/",pos:"n",th:"บ้าน",ex:"I'm going home."},
+  {w:"hope",ph:"/həʊp/",pos:"v/n",th:"หวัง",ex:"I hope you're well."},
+  {w:"hour",ph:"/aʊər/",pos:"n",th:"ชั่วโมง",ex:"One hour later."},
+  {w:"house",ph:"/haʊs/",pos:"n",th:"บ้าน / ที่พัก",ex:"A big house."},
+  {w:"how",ph:"/haʊ/",pos:"adv",th:"อย่างไร",ex:"How are you?"},
+  {w:"human",ph:"/ˈhjuː.mən/",pos:"n/adj",th:"มนุษย์",ex:"Human rights."},
+  {w:"idea",ph:"/aɪˈdɪə/",pos:"n",th:"ความคิด",ex:"Good idea!"},
+  {w:"if",ph:"/ɪf/",pos:"conj",th:"ถ้า",ex:"If it rains, stay in."},
+  {w:"important",ph:"/ɪmˈpɔː.tənt/",pos:"adj",th:"สำคัญ",ex:"This is important."},
+  {w:"include",ph:"/ɪnˈkluːd/",pos:"v",th:"รวมถึง",ex:"Include everyone."},
+  {w:"increase",ph:"/ɪnˈkriːs/",pos:"v",th:"เพิ่มขึ้น",ex:"Prices increase."},
+  {w:"interest",ph:"/ˈɪn.trəst/",pos:"n",th:"ความสนใจ",ex:"My interest is music."},
+  {w:"job",ph:"/dʒɒb/",pos:"n",th:"งาน",ex:"I have a good job."},
+  {w:"join",ph:"/dʒɔɪn/",pos:"v",th:"เข้าร่วม",ex:"Join the club!"},
+  {w:"just",ph:"/dʒʌst/",pos:"adv",th:"แค่ / เพิ่งจะ",ex:"Just do it!"},
+  {w:"keep",ph:"/kiːp/",pos:"v",th:"เก็บ / รักษา",ex:"Keep the change."},
+  {w:"kind",ph:"/kaɪnd/",pos:"adj/n",th:"ใจดี / ชนิด",ex:"Be kind to others."},
+  {w:"know",ph:"/nəʊ/",pos:"v",th:"รู้",ex:"I know the answer."},
+  {w:"land",ph:"/lænd/",pos:"n/v",th:"ที่ดิน / ลงจอด",ex:"The plane will land."},
+  {w:"language",ph:"/ˈlæŋ.ɡwɪdʒ/",pos:"n",th:"ภาษา",ex:"Learn a new language."},
+  {w:"large",ph:"/lɑːdʒ/",pos:"adj",th:"ใหญ่โต",ex:"A large family."},
+  {w:"last",ph:"/lɑːst/",pos:"adj",th:"สุดท้าย / ที่แล้ว",ex:"Last night."},
+  {w:"late",ph:"/leɪt/",pos:"adj/adv",th:"สาย",ex:"Don't be late."},
+  {w:"laugh",ph:"/lɑːf/",pos:"v",th:"หัวเราะ",ex:"Don't laugh at me."},
+  {w:"learn",ph:"/lɜːn/",pos:"v",th:"เรียนรู้",ex:"Learn every day."},
+  {w:"leave",ph:"/liːv/",pos:"v",th:"ออกไป / ทิ้ง",ex:"Leave me alone."},
+  {w:"left",ph:"/left/",pos:"adj/adv",th:"ซ้าย",ex:"Turn left."},
+  {w:"less",ph:"/les/",pos:"det",th:"น้อยกว่า",ex:"Less sugar please."},
+  {w:"life",ph:"/laɪf/",pos:"n",th:"ชีวิต",ex:"Life is beautiful."},
+  {w:"light",ph:"/laɪt/",pos:"n/adj",th:"แสง / เบา",ex:"Turn on the light."},
+  {w:"like",ph:"/laɪk/",pos:"v/prep",th:"ชอบ / เหมือน",ex:"I like coffee."},
+  {w:"line",ph:"/laɪn/",pos:"n",th:"เส้น / แถว",ex:"Stand in a line."},
+  {w:"listen",ph:"/ˈlɪs.ən/",pos:"v",th:"ฟัง",ex:"Listen carefully."},
+  {w:"little",ph:"/ˈlɪt.əl/",pos:"adj",th:"เล็กน้อย / น้อย",ex:"A little water."},
+  {w:"live",ph:"/lɪv/",pos:"v",th:"อยู่ / มีชีวิต",ex:"I live in Bangkok."},
+  {w:"long",ph:"/lɒŋ/",pos:"adj",th:"ยาว / นาน",ex:"A long road."},
+  {w:"look",ph:"/lʊk/",pos:"v",th:"มอง / ดู",ex:"Look at me!"},
+  {w:"lose",ph:"/luːz/",pos:"v",th:"แพ้ / หาย",ex:"Don't lose hope."},
+  {w:"love",ph:"/lʌv/",pos:"v/n",th:"รัก",ex:"I love you."},
+  {w:"low",ph:"/ləʊ/",pos:"adj",th:"ต่ำ",ex:"A low voice."},
+  {w:"make",ph:"/meɪk/",pos:"v",th:"ทำ / สร้าง",ex:"Make a wish!"},
+  {w:"man",ph:"/mæn/",pos:"n",th:"ผู้ชาย",ex:"A kind man."},
+  {w:"many",ph:"/ˈmen.i/",pos:"det",th:"หลาย",ex:"Many people came."},
+  {w:"matter",ph:"/ˈmæt.ər/",pos:"v/n",th:"สำคัญ / เรื่อง",ex:"It doesn't matter."},
+  {w:"may",ph:"/meɪ/",pos:"modal",th:"อาจจะ",ex:"It may rain today."},
+  {w:"mean",ph:"/miːn/",pos:"v",th:"หมายความว่า",ex:"What does it mean?"},
+  {w:"meet",ph:"/miːt/",pos:"v",th:"พบปะ",ex:"Nice to meet you!"},
+  {w:"might",ph:"/maɪt/",pos:"modal",th:"อาจจะ",ex:"She might be right."},
+  {w:"mind",ph:"/maɪnd/",pos:"n/v",th:"จิตใจ / ไม่รังเกียจ",ex:"I don't mind."},
+  {w:"miss",ph:"/mɪs/",pos:"v",th:"คิดถึง / พลาด",ex:"I miss you."},
+  {w:"money",ph:"/ˈmʌn.i/",pos:"n",th:"เงิน",ex:"Save your money."},
+  {w:"month",ph:"/mʌnθ/",pos:"n",th:"เดือน",ex:"Next month."},
+  {w:"more",ph:"/mɔːr/",pos:"det",th:"มากกว่า / อีก",ex:"Tell me more."},
+  {w:"most",ph:"/məʊst/",pos:"det",th:"มากที่สุด",ex:"Most people agree."},
+  {w:"move",ph:"/muːv/",pos:"v",th:"เคลื่อนที่ / ย้าย",ex:"Move forward."},
+  {w:"much",ph:"/mʌtʃ/",pos:"det",th:"มาก",ex:"Thank you so much!"},
+  {w:"must",ph:"/mʌst/",pos:"modal",th:"ต้อง",ex:"You must try."},
+  {w:"name",ph:"/neɪm/",pos:"n",th:"ชื่อ",ex:"What's your name?"},
+  {w:"near",ph:"/nɪər/",pos:"prep/adj",th:"ใกล้",ex:"Near the school."},
+  {w:"need",ph:"/niːd/",pos:"v",th:"ต้องการ",ex:"I need help."},
+  {w:"never",ph:"/ˈnev.ər/",pos:"adv",th:"ไม่เคย",ex:"Never give up."},
+  {w:"new",ph:"/njuː/",pos:"adj",th:"ใหม่",ex:"A new phone."},
+  {w:"news",ph:"/njuːz/",pos:"n",th:"ข่าว",ex:"Watch the news."},
+  {w:"next",ph:"/nekst/",pos:"adj",th:"ถัดไป",ex:"Next week."},
+  {w:"night",ph:"/naɪt/",pos:"n",th:"กลางคืน",ex:"Good night!"},
+  {w:"now",ph:"/naʊ/",pos:"adv",th:"ตอนนี้",ex:"Do it now!"},
+  {w:"number",ph:"/ˈnʌm.bər/",pos:"n",th:"ตัวเลข",ex:"What's the number?"},
+  {w:"offer",ph:"/ˈɒf.ər/",pos:"v/n",th:"เสนอ",ex:"Offer help."},
+  {w:"often",ph:"/ˈɒf.ən/",pos:"adv",th:"บ่อยๆ",ex:"I often read."},
+  {w:"old",ph:"/əʊld/",pos:"adj",th:"เก่า / แก่",ex:"An old friend."},
+  {w:"only",ph:"/ˈəʊn.li/",pos:"adv",th:"เพียงแค่",ex:"Only you can do it."},
+  {w:"open",ph:"/ˈəʊ.pən/",pos:"v/adj",th:"เปิด",ex:"Open the window."},
+  {w:"or",ph:"/ɔːr/",pos:"conj",th:"หรือ",ex:"Tea or coffee?"},
+  {w:"order",ph:"/ˈɔː.dər/",pos:"v/n",th:"สั่ง / คำสั่ง",ex:"Order online."},
+  {w:"other",ph:"/ˈʌð.ər/",pos:"det",th:"อื่น",ex:"Other people."},
+  {w:"over",ph:"/ˈəʊ.vər/",pos:"prep",th:"เหนือ / เสร็จสิ้น",ex:"It's over."},
+  {w:"own",ph:"/əʊn/",pos:"adj/v",th:"ของตัวเอง",ex:"My own room."},
+  {w:"part",ph:"/pɑːt/",pos:"n",th:"ส่วน",ex:"Part of the plan."},
+  {w:"pass",ph:"/pɑːs/",pos:"v",th:"ผ่าน / สอบผ่าน",ex:"Pass the exam."},
+  {w:"pay",ph:"/peɪ/",pos:"v",th:"จ่าย",ex:"Pay the bill."},
+  {w:"people",ph:"/ˈpiː.pəl/",pos:"n",th:"ผู้คน",ex:"Many people."},
+  {w:"pick",ph:"/pɪk/",pos:"v",th:"เลือก / หยิบ",ex:"Pick a card."},
+  {w:"place",ph:"/pleɪs/",pos:"n",th:"สถานที่",ex:"A beautiful place."},
+  {w:"plan",ph:"/plæn/",pos:"n/v",th:"แผน / วางแผน",ex:"Make a plan."},
+  {w:"play",ph:"/pleɪ/",pos:"v",th:"เล่น",ex:"Children love to play."},
+  {w:"point",ph:"/pɔɪnt/",pos:"n/v",th:"จุด / ชี้",ex:"Good point!"},
+  {w:"possible",ph:"/ˈpɒs.ɪ.bəl/",pos:"adj",th:"เป็นไปได้",ex:"Anything is possible."},
+  {w:"power",ph:"/ˈpaʊ.ər/",pos:"n",th:"พลัง / อำนาจ",ex:"The power of love."},
+  {w:"prepare",ph:"/prɪˈpeər/",pos:"v",th:"เตรียม",ex:"Prepare for the test."},
+  {w:"present",ph:"/ˈprez.ənt/",pos:"n/adj",th:"ปัจจุบัน / ของขวัญ",ex:"Live in the present."},
+  {w:"problem",ph:"/ˈprɒb.ləm/",pos:"n",th:"ปัญหา",ex:"No problem!"},
+  {w:"produce",ph:"/prəˈdjuːs/",pos:"v",th:"ผลิต",ex:"Produce results."},
+  {w:"program",ph:"/ˈprəʊ.ɡræm/",pos:"n",th:"โปรแกรม",ex:"A TV program."},
+  {w:"provide",ph:"/prəˈvaɪd/",pos:"v",th:"จัดหา / ให้",ex:"Provide support."},
+  {w:"pull",ph:"/pʊl/",pos:"v",th:"ดึง",ex:"Pull the rope."},
+  {w:"push",ph:"/pʊʃ/",pos:"v",th:"ดัน / ผลัก",ex:"Push the door."},
+  {w:"put",ph:"/pʊt/",pos:"v",th:"วาง",ex:"Put it here."},
+  {w:"question",ph:"/ˈkwes.tʃən/",pos:"n",th:"คำถาม",ex:"Ask a question."},
+  {w:"quickly",ph:"/ˈkwɪk.li/",pos:"adv",th:"อย่างรวดเร็ว",ex:"Act quickly!"},
+  {w:"quiet",ph:"/ˈkwaɪ.ət/",pos:"adj",th:"เงียบ",ex:"Please be quiet."},
+  {w:"reach",ph:"/riːtʃ/",pos:"v",th:"เอื้อมถึง / ไปถึง",ex:"Reach your goals."},
+  {w:"read",ph:"/riːd/",pos:"v",th:"อ่าน",ex:"Read every day."},
+  {w:"ready",ph:"/ˈred.i/",pos:"adj",th:"พร้อม",ex:"Are you ready?"},
+  {w:"real",ph:"/rɪəl/",pos:"adj",th:"จริง",ex:"Is this real?"},
+  {w:"reason",ph:"/ˈriː.zən/",pos:"n",th:"เหตุผล",ex:"Give me a reason."},
+  {w:"remember",ph:"/rɪˈmem.bər/",pos:"v",th:"จำ / จำได้",ex:"Remember to call."},
+  {w:"report",ph:"/rɪˈpɔːt/",pos:"n/v",th:"รายงาน",ex:"Write a report."},
+  {w:"rest",ph:"/rest/",pos:"n/v",th:"พักผ่อน",ex:"Take a rest."},
+  {w:"right",ph:"/raɪt/",pos:"adj/adv",th:"ถูก / ขวา",ex:"Turn right."},
+  {w:"road",ph:"/rəʊd/",pos:"n",th:"ถนน",ex:"Cross the road safely."},
+  {w:"room",ph:"/ruːm/",pos:"n",th:"ห้อง",ex:"My room is small."},
+  {w:"run",ph:"/rʌn/",pos:"v",th:"วิ่ง",ex:"Run faster!"},
+  {w:"safe",ph:"/seɪf/",pos:"adj",th:"ปลอดภัย",ex:"Stay safe!"},
+  {w:"same",ph:"/seɪm/",pos:"adj",th:"เหมือนกัน",ex:"The same as before."},
+  {w:"say",ph:"/seɪ/",pos:"v",th:"พูด / บอก",ex:"Say hello!"},
+  {w:"school",ph:"/skuːl/",pos:"n",th:"โรงเรียน",ex:"Go to school."},
+  {w:"see",ph:"/siː/",pos:"v",th:"เห็น",ex:"I see you!"},
+  {w:"seem",ph:"/siːm/",pos:"v",th:"ดูเหมือน",ex:"You seem tired."},
+  {w:"send",ph:"/send/",pos:"v",th:"ส่ง",ex:"Send a message."},
+  {w:"set",ph:"/set/",pos:"v/n",th:"ตั้ง / ชุด",ex:"Set the table."},
+  {w:"show",ph:"/ʃəʊ/",pos:"v",th:"แสดง",ex:"Show me the way."},
+  {w:"simple",ph:"/ˈsɪm.pəl/",pos:"adj",th:"ง่าย / เรียบง่าย",ex:"Keep it simple."},
+  {w:"sit",ph:"/sɪt/",pos:"v",th:"นั่ง",ex:"Sit down please."},
+  {w:"sleep",ph:"/sliːp/",pos:"v",th:"นอนหลับ",ex:"Sleep well!"},
+  {w:"slow",ph:"/sləʊ/",pos:"adj",th:"ช้า",ex:"Drive slow."},
+  {w:"small",ph:"/smɔːl/",pos:"adj",th:"เล็ก",ex:"A small mistake."},
+  {w:"smile",ph:"/smaɪl/",pos:"v/n",th:"ยิ้ม",ex:"Smile always!"},
+  {w:"so",ph:"/səʊ/",pos:"conj/adv",th:"ดังนั้น / มาก",ex:"So what?"},
+  {w:"some",ph:"/sʌm/",pos:"det",th:"บางส่วน",ex:"Some water please."},
+  {w:"sometimes",ph:"/ˈsʌm.taɪmz/",pos:"adv",th:"บางครั้ง",ex:"Sometimes I cook."},
+  {w:"soon",ph:"/suːn/",pos:"adv",th:"เร็วๆ นี้",ex:"See you soon!"},
+  {w:"sorry",ph:"/ˈsɒr.i/",pos:"adj",th:"ขอโทษ",ex:"I'm so sorry."},
+  {w:"speak",ph:"/spiːk/",pos:"v",th:"พูด",ex:"Speak clearly."},
+  {w:"special",ph:"/ˈspeʃ.əl/",pos:"adj",th:"พิเศษ",ex:"You are special."},
+  {w:"spend",ph:"/spend/",pos:"v",th:"ใช้จ่าย / ใช้เวลา",ex:"Spend wisely."},
+  {w:"stand",ph:"/stænd/",pos:"v",th:"ยืน",ex:"Stand up please."},
+  {w:"start",ph:"/stɑːt/",pos:"v",th:"เริ่ม",ex:"Start now!"},
+  {w:"stay",ph:"/steɪ/",pos:"v",th:"อยู่",ex:"Stay home."},
+  {w:"still",ph:"/stɪl/",pos:"adv",th:"ยังคง",ex:"Still waiting."},
+  {w:"stop",ph:"/stɒp/",pos:"v",th:"หยุด",ex:"Stop!"},
+  {w:"strong",ph:"/strɒŋ/",pos:"adj",th:"แข็งแกร่ง",ex:"Be strong!"},
+  {w:"study",ph:"/ˈstʌd.i/",pos:"v/n",th:"เรียน / ศึกษา",ex:"Study hard."},
+  {w:"such",ph:"/sʌtʃ/",pos:"det",th:"เช่น / อย่างนั้น",ex:"Such a great idea!"},
+  {w:"sure",ph:"/ʃʊər/",pos:"adj",th:"แน่ใจ",ex:"Are you sure?"},
+  {w:"system",ph:"/ˈsɪs.təm/",pos:"n",th:"ระบบ",ex:"The school system."},
+  {w:"take",ph:"/teɪk/",pos:"v",th:"รับ / ใช้เวลา",ex:"Take your time."},
+  {w:"talk",ph:"/tɔːk/",pos:"v",th:"พูดคุย",ex:"Let's talk."},
+  {w:"teach",ph:"/tiːtʃ/",pos:"v",th:"สอน",ex:"Teach me."},
+  {w:"tell",ph:"/tel/",pos:"v",th:"บอก",ex:"Tell the truth."},
+  {w:"than",ph:"/ðæn/",pos:"conj",th:"กว่า",ex:"Better than before."},
+  {w:"think",ph:"/θɪŋk/",pos:"v",th:"คิด",ex:"Think before you act."},
+  {w:"through",ph:"/θruː/",pos:"prep",th:"ผ่าน",ex:"Walk through the park."},
+  {w:"time",ph:"/taɪm/",pos:"n",th:"เวลา",ex:"Time flies!"},
+  {w:"together",ph:"/təˈɡeð.ər/",pos:"adv",th:"ด้วยกัน",ex:"Work together."},
+  {w:"too",ph:"/tuː/",pos:"adv",th:"เกินไป / ด้วย",ex:"Me too!"},
+  {w:"toward",ph:"/təˈwɔːd/",pos:"prep",th:"ไปยัง",ex:"Walk toward me."},
+  {w:"travel",ph:"/ˈtræv.əl/",pos:"v/n",th:"เดินทาง",ex:"I love to travel."},
+  {w:"true",ph:"/truː/",pos:"adj",th:"จริง",ex:"Is that true?"},
+  {w:"try",ph:"/traɪ/",pos:"v",th:"พยายาม / ลอง",ex:"Try your best."},
+  {w:"turn",ph:"/tɜːn/",pos:"v",th:"เลี้ยว / หมุน",ex:"Turn left."},
+  {w:"under",ph:"/ˈʌn.dər/",pos:"prep",th:"ใต้",ex:"Under the table."},
+  {w:"understand",ph:"/ˌʌn.dəˈstænd/",pos:"v",th:"เข้าใจ",ex:"Do you understand?"},
+  {w:"until",ph:"/ənˈtɪl/",pos:"prep",th:"จนกระทั่ง",ex:"Wait until Friday."},
+  {w:"use",ph:"/juːz/",pos:"v",th:"ใช้",ex:"Use it wisely."},
+  {w:"very",ph:"/ˈver.i/",pos:"adv",th:"มาก",ex:"Very good!"},
+  {w:"wait",ph:"/weɪt/",pos:"v",th:"รอ",ex:"Wait for me."},
+  {w:"walk",ph:"/wɔːk/",pos:"v",th:"เดิน",ex:"Walk to school."},
+  {w:"want",ph:"/wɒnt/",pos:"v",th:"ต้องการ / อยากได้",ex:"I want to learn."},
+  {w:"watch",ph:"/wɒtʃ/",pos:"v",th:"ดู / จับตา",ex:"Watch a movie."},
+  {w:"water",ph:"/ˈwɔː.tər/",pos:"n",th:"น้ำ",ex:"Drink more water."},
+  {w:"way",ph:"/weɪ/",pos:"n",th:"ทาง / วิธี",ex:"Find a way."},
+  {w:"week",ph:"/wiːk/",pos:"n",th:"สัปดาห์",ex:"Next week."},
+  {w:"well",ph:"/wel/",pos:"adv/adj",th:"ดี / สบายดี",ex:"I'm well, thanks."},
+  {w:"when",ph:"/wen/",pos:"adv",th:"เมื่อไร",ex:"When did it happen?"},
+  {w:"where",ph:"/weər/",pos:"adv",th:"ที่ไหน",ex:"Where are you?"},
+  {w:"while",ph:"/waɪl/",pos:"conj",th:"ขณะที่",ex:"While I was sleeping."},
+  {w:"who",ph:"/huː/",pos:"pron",th:"ใคร",ex:"Who are you?"},
+  {w:"why",ph:"/waɪ/",pos:"adv",th:"ทำไม",ex:"Why are you sad?"},
+  {w:"win",ph:"/wɪn/",pos:"v",th:"ชนะ",ex:"Win the game!"},
+  {w:"with",ph:"/wɪð/",pos:"prep",th:"กับ / ด้วย",ex:"Come with me."},
+  {w:"woman",ph:"/ˈwʊm.ən/",pos:"n",th:"ผู้หญิง",ex:"A kind woman."},
+  {w:"word",ph:"/wɜːd/",pos:"n",th:"คำ",ex:"Learn new words."},
+  {w:"work",ph:"/wɜːk/",pos:"v/n",th:"ทำงาน",ex:"Work hard!"},
+  {w:"world",ph:"/wɜːld/",pos:"n",th:"โลก",ex:"Travel the world."},
+  {w:"write",ph:"/raɪt/",pos:"v",th:"เขียน",ex:"Write your name."},
+  {w:"wrong",ph:"/rɒŋ/",pos:"adj",th:"ผิด",ex:"Something is wrong."},
+  {w:"year",ph:"/jɪər/",pos:"n",th:"ปี",ex:"A new year!"},
+  {w:"yet",ph:"/jet/",pos:"adv",th:"ยังไม่",ex:"Not yet."},
+  {w:"young",ph:"/jʌŋ/",pos:"adj",th:"อายุน้อย / หนุ่มสาว",ex:"Young and talented."}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let knownWords = new Set(JSON.parse(localStorage.getItem('oxford_known') || '[]'));
+let deck = [];
+let currentIndex = 0;
+let sessionCount = 0;
+let isFlipped = false;
+let currentMode = 'en-th'; // 'en-th' or 'th-en'
+
+function saveProgress() {
+  localStorage.setItem('oxford_known', JSON.stringify([...knownWords]));
+}
+
+function buildDeck() {
+  // Unknown words first, then shuffle
+  const unknown = words.filter(w => !knownWords.has(w.w));
+  deck = unknown.sort(() => Math.random() - 0.5);
+  if (deck.length === 0) {
+    showComplete();
+    return;
+  }
+  currentIndex = 0;
+  renderCard();
+}
+
+function randomMode() {
+  currentMode = Math.random() > 0.5 ? 'en-th' : 'th-en';
+}
+
+function renderCard() {
+  if (currentIndex >= deck.length) {
+    showComplete();
+    return;
+  }
+  const card = deck[currentIndex];
+  randomMode();
+  isFlipped = false;
+  document.getElementById('flashcard').classList.remove('flipped');
+
+  if (currentMode === 'en-th') {
+    document.getElementById('front-label').textContent = 'ENGLISH';
+    document.getElementById('front-word').textContent = card.w;
+    document.getElementById('front-phonetic').textContent = card.ph;
+    document.getElementById('front-pos').textContent = card.pos;
+    document.getElementById('back-label').textContent = 'ภาษาไทย';
+    document.getElementById('back-meaning').textContent = card.th;
+    document.getElementById('back-example').textContent = '"' + card.ex + '"';
+    document.getElementById('mode-text').textContent = 'EN → TH';
+  } else {
+    document.getElementById('front-label').textContent = 'ภาษาไทย';
+    document.getElementById('front-word').textContent = card.th;
+    document.getElementById('front-phonetic').textContent = '';
+    document.getElementById('front-pos').textContent = card.pos;
+    document.getElementById('back-label').textContent = 'ENGLISH';
+    document.getElementById('back-meaning').textContent = card.w;
+    document.getElementById('back-example').textContent = card.ph + ' · "' + card.ex + '"';
+    document.getElementById('mode-text').textContent = 'TH → EN';
+  }
+
+  const total = words.filter(w => !knownWords.has(w.w)).length;
+  document.getElementById('card-counter').textContent =
+    String(currentIndex + 1).padStart(3,'0') + ' / ' + String(total).padStart(3,'0');
+  updateStats();
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', isFlipped);
+}
+
+function markCard(known) {
+  const card = deck[currentIndex];
+  if (known) {
+    knownWords.add(card.w);
+    saveProgress();
+  }
+  sessionCount++;
+  currentIndex++;
+  renderCard();
+  updateStats();
+}
+
+function nextCard() {
+  sessionCount++;
+  currentIndex++;
+  renderCard();
+}
+
+function updateStats() {
+  const k = knownWords.size;
+  const pct = Math.round((k / 500) * 100);
+  document.getElementById('known-count').textContent = k;
+  document.getElementById('known-count2').textContent = k;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = pct + '%';
+  document.getElementById('session-count').textContent = 'session: ' + sessionCount;
+  // progress screen
+  document.getElementById('big-known').textContent = k;
+  document.getElementById('stat-remaining').textContent = 500 - k;
+  document.getElementById('stat-session').textContent = sessionCount;
+  // chips
+  const chips = document.getElementById('known-chips');
+  if (k === 0) {
+    chips.innerHTML = '<span style="color:var(--dim);font-size:12px">ยังไม่มีคำที่จำได้</span>';
+  } else {
+    chips.innerHTML = [...knownWords].map(w => `<span class="word-chip">${w}</span>`).join('');
+  }
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (name === 'study') {
+    document.getElementById('study-screen').classList.add('active');
+    document.querySelectorAll('.nav-btn')[0].classList.add('active');
+  } else if (name === 'progress') {
+    document.getElementById('progress-screen').classList.add('active');
+    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+    updateStats();
+  }
+}
+
+function showComplete() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const k = knownWords.size;
+  document.getElementById('complete-sub').textContent =
+    `จำได้แล้ว ${k} คำ จาก 500 คำ 🎯`;
+  document.getElementById('complete-screen').classList.add('active');
+}
+
+function startAgain() {
+  sessionCount = 0;
+  buildDeck();
+  showScreen('study');
+}
+
+function resetProgress() {
+  if (confirm('รีเซ็ตความคืบหน้าทั้งหมด?')) {
+    knownWords.clear();
+    saveProgress();
+    sessionCount = 0;
+    buildDeck();
+    showScreen('study');
+    updateStats();
+  }
+}
+
+// INIT
+buildDeck();
+updateStats();
+</script>
+</body>
+</html>
